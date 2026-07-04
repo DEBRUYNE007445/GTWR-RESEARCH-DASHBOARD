@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spatial-Temporal Analysis of Residential Land Price in Ubungo Municipal Using GTWR</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#1a2744;--orange:#e07b39;--cream:#f4f3ef;--border:#dde1ea;--grey:#4a5568;--light:#eef0f5}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--cream);color:var(--grey)}
+header{background:var(--navy);padding:1.1rem 2rem;display:flex;align-items:center;gap:1rem}
+.hbadge{background:var(--orange);color:#fff;font-size:10px;font-weight:700;padding:4px 10px;border-radius:4px;letter-spacing:.08em;white-space:nowrap;flex-shrink:0}
+.htitle{color:#fff;font-size:.95rem;font-weight:600;line-height:1.35}
+.hsub{color:rgba(255,255,255,.55);font-size:11px;margin-top:2px}
+nav{background:var(--navy);border-top:1px solid rgba(255,255,255,.1);display:flex;overflow-x:auto}
+nav a{color:rgba(255,255,255,.65);text-decoration:none;padding:11px 20px;font-size:13px;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s;cursor:pointer}
+nav a:hover,nav a.active{color:#fff;border-bottom-color:var(--orange)}
+main{max-width:1100px;margin:0 auto;padding:1.8rem}
+.section{display:none}.section.active{display:block}
+.page-title{font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:3px}
+.page-sub{font-size:12.5px;color:#888;margin-bottom:1.3rem;line-height:1.5}
+.map-pills{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:1.3rem}
+.pill{padding:7px 16px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--grey);transition:all .2s}
+.pill:hover{border-color:var(--navy);color:var(--navy)}
+.pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.map-card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1rem}
+.map-header{background:var(--navy);color:#fff;padding:.7rem 1.2rem}
+.map-header .mh-title{font-size:14px;font-weight:700}
+.map-header .mh-sub{font-size:11px;color:rgba(255,255,255,.55);margin-top:1px}
+.map-img-wrap{width:100%;background:#f9f9f9;cursor:zoom-in}
+.map-img-wrap img{width:100%;display:block;object-fit:contain}
+.map-caption{padding:.9rem 1.2rem;font-size:12px;color:#666;line-height:1.65;border-top:1px solid var(--border);background:#fafafa}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;margin-bottom:1.5rem}
+.gal-card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:zoom-in;transition:box-shadow .2s}
+.gal-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.gal-card img{width:100%;display:block;object-fit:contain;background:#f9f9f9}
+.gal-card .gl{padding:.6rem .9rem;font-size:12px;font-weight:600;color:var(--navy);border-top:1px solid var(--border)}
+.gal-card .gs{padding:0 .9rem .6rem;font-size:11px;color:#aaa}
+#lb{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;padding:1rem}
+#lb.open{display:flex}
+#lb img{max-width:95vw;max-height:93vh;border-radius:6px;display:block}
+#lb-close{position:fixed;top:14px;right:18px;color:#fff;font-size:30px;cursor:pointer;background:none;border:none;line-height:1}
+#lb-cap{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.7);font-size:12px;text-align:center;white-space:nowrap}
+footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padding:1.2rem;font-size:11.5px;margin-top:3rem}
+footer strong{color:#fff}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="hbadge">GTWR RESEARCH</span>
+  <div>
+    <div class="htitle">Spatial-Temporal Analysis of Residential Land Price in Ubungo Municipal Using GTWR</div>
+    <div class="hsub">Ardhi University &nbsp;·&nbsp; Bachelor's Dissertation &nbsp;·&nbsp; 2022–2025 &nbsp;·&nbsp; 14 Wards &nbsp;·&nbsp; 488 Observations</div>
+  </div>
+</header>
+
+<nav>
+  <a class="active" onclick="show('maps',this)">Spatial Maps</a>
+  <a onclick="show('trends',this)">Price Trends</a>
+  <a onclick="show('gtwr',this)">GTWR Results</a>
+  <a onclick="show('corr',this)">Correlations</a>
+  <a onclick="show('traj',this)">Trajectories & Projection</a>
+  <a onclick="show('other',this)">Other Figures</a>
+</nav>
+
+<main>
+
+<!-- SPATIAL MAPS -->
+<div id="maps" class="section active">
+  <div class="page-title">Spatial Maps — 2022 to 2025</div>
+  <div class="page-sub">Each map shows the spatial distribution of a GTWR variable across Ubungo's 14 wards for all four years (2022–2025). Click a map to enlarge.</div>
+  <div class="map-pills" id="pills"></div>
+  <div class="map-card">
+    <div class="map-header">
+      <div class="mh-title" id="mh-title"></div>
+      <div class="mh-sub" id="mh-sub"></div>
+    </div>
+    <div class="map-img-wrap" id="map-wrap">
+      <img id="map-img" src="" alt="">
+    </div>
+    <div class="map-caption" id="map-cap"></div>
+  </div>
+</div>
+
+<!-- PRICE TRENDS -->
+<div id="trends" class="section">
+  <div class="page-title">Price Trend Maps</div>
+  <div class="page-sub">Maximum and minimum residential land price trends per ward, 2022–2025.</div>
+  <div class="gallery" id="trends-gal"></div>
+</div>
+
+<!-- GTWR RESULTS -->
+<div id="gtwr" class="section">
+  <div class="page-title">GTWR Model Results</div>
+  <div class="page-sub">Model performance metrics, predicted price distribution, and coefficient surfaces from the GTWR analysis. Global R² = 0.8912, AIC = −1,166.7.</div>
+  <div class="gallery" id="gtwr-gal"></div>
+</div>
+
+<!-- CORRELATIONS -->
+<div id="corr" class="section">
+  <div class="page-title">Correlation Analysis</div>
+  <div class="page-sub">Pearson correlation matrices and predictor relationship charts. Night-time light is the strongest predictor (r = +0.83); CBD distance is the weakest (r = −0.20).</div>
+  <div class="gallery" id="corr-gal"></div>
+</div>
+
+<!-- TRAJECTORIES & PROJECTION -->
+<div id="traj" class="section">
+  <div class="page-title">Trajectories & 2040 Projection</div>
+  <div class="page-sub">Ward-level price trajectories (2022–2025) and directional rose scenario projection to 2040. Aggregate CAGR: 19.6%/yr.</div>
+  <div class="gallery" id="traj-gal"></div>
+</div>
+
+<!-- OTHER -->
+<div id="other" class="section">
+  <div class="page-title">Other Figures</div>
+  <div class="page-sub">Land use comparison and supplementary figures.</div>
+  <div class="gallery" id="other-gal"></div>
+</div>
+
+</main>
+
+<div id="lb" onclick="closeLB()">
+  <button id="lb-close" onclick="closeLB()">×</button>
+  <img id="lb-img" src="" alt="">
+  <div id="lb-cap"></div>
+</div>
+
+<footer>
+  <strong>Spatial-Temporal Analysis of Residential Land Price in Ubungo Municipal Using GTWR</strong><br>
+  Ardhi University &nbsp;·&nbsp; Bachelor's Dissertation &nbsp;·&nbsp; Dar es Salaam, Tanzania &nbsp;·&nbsp; 2022–2025<br>
+  Data: Ministry of Lands Indicative Land Values 2022 &nbsp;·&nbsp; GTWR Final 5-Factor Dataset (488 observations)
+</footer>
+
+<script>
+// ── SPATIAL MAPS ───────────────────────────────────────────────────────
+// File path: filename.png  (put all your PNGs in an "images" folder)
+const MAPS = [
+  {
+    label:'BRT Accessibility',
+    file:'GTWR_BRT_coef_EDITED_STYLE.png',
+    title:'GTWR BRT Accessibility Coefficient Distribution',
+    sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',
+    cap:'Spatial distribution of the BRT accessibility coefficient across Ubungo\'s 14 wards. Darker red = stronger BRT transit influence on residential land price. Pearson r = −0.593 with log(price). BRT collinearity with road distance (r = 0.98) addressed via ridge regularisation (λ = 0.05).'
+  },
+  {
+    label:'CBD Accessibility',
+    file:'GTWR_CBD_coef_EDITED_STYLE.png',
+    title:'GTWR CBD Accessibility Coefficient Distribution',
+    sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',
+    cap:'Spatial variation of the CBD distance effect. Weak global influence (Pearson r = −0.200) due to Ubungo\'s narrow CBD distance range. Local coefficients reveal pockets of stronger effect near the urban core in core wards (Sinza, Ubungo).'
+  },
+  {
+    label:'Road Accessibility',
+    file:'GTWR_Road_coef_EDITED_STYLE.png',
+    title:'GTWR Road Accessibility Coefficient Distribution',
+    sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',
+    cap:'Road proximity premium mapped across Ubungo Municipality. Pearson r = −0.505 with log(price). Core wards show strengthening road accessibility coefficients over the study period, indicating growing importance of road access for land valuation.'
+  },
+  {
+    label:'Night-time Light',
+    file:'GTWR_NTL_norm_EDITED_STYLE.png',
+    title:'GTWR Night-time Light Coefficient Distribution',
+    sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',
+    cap:'Night-time light (NTL) is the strongest predictor of residential land price (Pearson r = +0.830). Higher NTL intensity reflects economic activity concentration. Coefficients strengthen over time in core wards (Sinza, Ubungo), indicating an intensifying agglomeration premium.'
+  },
+  {
+    label:'Population Density',
+    file:'GTWR_Population_coef_EDITED_STYLE.png',
+    title:'GTWR Population Density Coefficient Distribution',
+    sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',
+    cap:'Spatial pattern of population density influence on land price (Pearson r = +0.669). Core wards show strengthening density coefficients from 0.52 (2022) to 0.67 (2025). Note: raw population count is negatively correlated (−0.72) but the density variable (used in the model) is positive — a count-vs-density distinction critical for interpretation.'
+  },
+  {
+    label:'Health Accessibility',
+    file:'GTWR_Health_coef_EDITED_STYLE.png',
+    title:'GTWR Health Facility Accessibility Coefficient Distribution',
+    sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',
+    cap:'Spatial distribution of health facility accessibility coefficient across Ubungo Municipality. Shows how proximity to health facilities influences residential land prices across the 14 wards over the study period.'
+  },
+  {
+    label:'School Accessibility',
+    file:'GTWR_School_coef_EDITED_STYLE.png',
+    title:'GTWR School Accessibility Coefficient Distribution',
+    sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',
+    cap:'Spatial distribution of school accessibility coefficient. Proximity to educational facilities and its varying influence on residential land prices across Ubungo\'s wards, 2022–2025.'
+  },
+  {
+    label:'Police Accessibility',
+    file:'GTWR_Police_coef_EDITED_STYLE.png',
+    title:'GTWR Police Accessibility Coefficient Distribution',
+    sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',
+    cap:'Spatial distribution of police facility accessibility coefficient across Ubungo Municipality. Reflects the varying influence of security service proximity on residential land prices, 2022–2025.'
+  },
+  {
+    label:'Predicted Price',
+    file:'GTWR_predicted price.png',
+    title:'GTWR Predicted Land Price Distribution',
+    sub:'Model Output · 2022–2025 · Ubungo Municipality',
+    cap:'GTWR model-fitted residential land prices across Ubungo Municipality. Global R² = 0.8912, Adjusted R² = 0.8900. The predicted surface captures the strong core–periphery gradient — Sinza and Ubungo consistently at the highest price tier, Kibamba and Kwembe at the lowest.'
+  },
+  {
+    label:'Same Factors Correlation',
+    file:'GTWR_Same_Factors_Correlation_With_NTL.png',
+    title:'GTWR Factor Correlation with NTL',
+    sub:'Correlation Analysis · Ubungo Municipality',
+    cap:'Correlation between GTWR factors including night-time light intensity. Shows the inter-predictor relationships that informed ridge regularisation decisions for collinear variables (BRT and road distance, r = 0.98).'
+  }
+];
+
+// Build pills
+const pillsDiv = document.getElementById('pills');
+MAPS.forEach((m,i) => {
+  const b = document.createElement('button');
+  b.className = 'pill'+(i===0?' active':'');
+  b.textContent = m.label;
+  b.onclick = () => {
+    document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+    b.classList.add('active');
+    loadMap(m);
+  };
+  pillsDiv.appendChild(b);
+});
+
+function loadMap(m) {
+  document.getElementById('mh-title').textContent = m.title;
+  document.getElementById('mh-sub').textContent = m.sub;
+  const img = document.getElementById('map-img');
+  img.src = m.file; img.alt = m.title;
+  document.getElementById('map-wrap').onclick = () => openLB(m.file, m.title);
+  document.getElementById('map-cap').textContent = m.cap;
+}
+loadMap(MAPS[0]);
+
+// ── GALLERY SECTIONS ───────────────────────────────────────────────────
+const GALLERIES = {
+  'trends-gal': [
+    {file:'Maximum_Land_Price_Trend_fixed.png',  label:'Maximum Land Price Trend',  sub:'Per ward · 2022–2025 · slope & R² per panel'},
+    {file:'Minimum_Land_Price_Trend_fixed.png',  label:'Minimum Land Price Trend',  sub:'Per ward · 2022–2025 · slope & R² per panel'}
+  ],
+  'gtwr-gal': [
+    {file:'Model_Performance_REAL.png',          label:'GTWR Model Performance',         sub:'R²=0.8912 · AIC=−1166.7 · RMSE=0.30 · MAPE=1.78%'},
+    {file:'GTWR_predicted price.png',            label:'Predicted Price Distribution',   sub:'GTWR fitted values · 2022–2025'}
+  ],
+  'corr-gal': [
+    {file:'final heatmap.png',                   label:'Pearson Correlation Heatmap',    sub:'GTWR variables · 5 predictors vs log(price)'},
+    {file:'GTWR_Same_Factors_Correlation_With_NTL.png', label:'Factor Correlation with NTL', sub:'Inter-predictor relationships'}
+  ],
+  'traj-gal': [
+    {file:'final trejector.png',                 label:'Price Trajectories',             sub:'All 14 wards · 2022–2025 · core–periphery divergence'},
+    {file:'projected price.png',                 label:'Directional Rose — 2040 Scenario', sub:'WNW & NE highest value corridors · CAGR 8–25%'},
+    {file:'Ubungo_LandPrice_Projection_Map.png', label:'Land Price Projection Map 2040', sub:'Scenario projection from 2025 base'}
+  ],
+  'other-gal': [
+    {file:'LAND USE/',                           label:'Land Use Comparison',            sub:'Residential · Commercial · Industrial · Petrol Station'}
+  ]
+};
+
+Object.entries(GALLERIES).forEach(([id, figs]) => {
+  const el = document.getElementById(id);
+  if(!el) return;
+  figs.forEach(f => {
+    el.innerHTML += `
+      <div class="gal-card" onclick="openLB('${f.file}','${f.label}')">
+        <img src="${f.file}" alt="${f.label}" loading="lazy">
+        <div class="gl">${f.label}</div>
+        <div class="gs">${f.sub}</div>
+      </div>`;
+  });
+});
+
+// ── LIGHTBOX ───────────────────────────────────────────────────────────
+function openLB(src, cap) {
+  document.getElementById('lb-img').src = src;
+  document.getElementById('lb-cap').textContent = cap;
+  document.getElementById('lb').classList.add('open');
+}
+function closeLB() { document.getElementById('lb').classList.remove('open'); }
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeLB(); });
+
+// ── NAV ────────────────────────────────────────────────────────────────
+function show(id, el) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(el) el.classList.add('active');
+  return false;
+}
+</script>
+</body>
+</html>

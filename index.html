@@ -103,7 +103,7 @@ footer strong{color:#fff}
 <header>
   <span class="hbadge">GTWR</span>
   <div style="min-width:0">
-    <div class="htitle">Spatial-Temporal Analysis of Residential Land Price in Ubungo Municipal Using GTWR</div>
+    <div class="htitle">Spatial Temporal Analysis of Residential Land Price in Ubungo Municipal Using GTWR</div>
     <div class="hsub">Ardhi University &nbsp;·&nbsp; Bachelor's Dissertation &nbsp;·&nbsp; 2022–2025 &nbsp;·&nbsp; 14 Wards &nbsp;·&nbsp; 488 Observations</div>
   </div>
 </header>
@@ -122,10 +122,6 @@ footer strong{color:#fff}
   <div class="hero-content">
     <img src="ARDHI.jpg" alt="Ardhi University" class="hero-logo"
          onerror="this.style.display='none'">
-    <div class="hero-uni">Ardhi University</div>
-    <div class="hero-school">School of Earth Science, Real Estate, Business &amp; Informatics</div>
-    <div class="hero-dept">Dept. of Geospatial Science &amp; Technology</div>
-    <div class="hero-divider"></div>
     <div class="hero-title">Spatial Temporal Analysis of Residential Land Price Dynamics of Ubungo Municipal (2022–2025)</div>
     <div class="hero-sub">Using Geographically &amp; Temporally Weighted Regression (GTWR) Model</div>
     <div class="hero-line"></div>
@@ -143,7 +139,7 @@ footer strong{color:#fff}
         <div class="about-grid">
           <div>
             <div class="ab-label">Study Area</div>
-            <div class="ab-val">Ubungo Municipality, Dar es Salaam — 14 wards, urban core to peri-urban fringe</div>
+            <div class="ab-val">Ubungo Municipality, Dar es Salaam 14 wards, urban core to peri-urban fringe</div>
             <img src="ubungo_study_area.png" alt="Study area" style="width:100%;margin-top:6px;border-radius:5px;border:1px solid rgba(26,39,68,.1)" onerror="this.style.display='none'">
           </div>
           <div><div class="ab-label">Study Period</div><div class="ab-val">2022–2025 · 488 geo-referenced observations</div></div>
@@ -246,18 +242,16 @@ const GALLERIES={
     {file:'GTWR_predicted_price.png',label:'Predicted Price Distribution',sub:'GTWR fitted values · 2022–2025'}
   ],
   'corr-gal':[
-    {file:'final_heat_map.png',label:'Pearson Correlation Heatmap',sub:'5 predictors vs log(price)'},
-    {file:'GTWR_Same_Factors_Correlation_With_NTL.png',label:'Factor Correlation with NTL',sub:'Inter-predictor relationships'}
+    {file:'final_heat_map.png',label:'Pearson Correlation Heatmap',sub:'5 predictors vs log(price)'}
   ],
   'traj-gal':[
     {file:'final_trejector.png',label:'Price Trajectories',sub:'All 14 wards · 2022–2025'},
-    {file:'projected_price.png',label:'Directional Rose — 2040 Scenario',sub:'WNW & NE highest value corridors'},
+    {file:'projected_price.png',label:'Directional Rose 2040 Scenario',sub:'WNW & NE highest value corridors'},
     {file:'Ubungo_LandPrice_Projection_Map.png',label:'Land Price Projection Map 2040',sub:'Scenario projection from 2025 base'}
   ],
   'other-gal':[
-    {file:'LandUse_FourYears_2x2_Marble.png',label:'Land Use — Four Years (2022–2025)',sub:'Residential · Commercial · Industrial · Petrol Station · all wards'},
-    {file:'LandUse_Price_PetalMap_2025.png',label:'Land Use Price Petal Map',sub:'Ward-level land-use price profiles · 2025'},
-    {file:'LandUse_Simple_Bar.png',label:'Land Use Simple Bar Chart',sub:'Price by use category · Ubungo Municipality · 2025'}
+    {file:'LandUse_FourYears_2x2_Marble.png',label:'Land Use Four Years (2022–2025)',sub:'Residential · Commercial · Industrial · Petrol Station · all wards'},
+    {file:'LandUse_Price_PetalMap_2025.png',label:'Land Use Price Petal Map',sub:'Ward-level land-use price profiles · 2025'}
   ]
 };
 Object.entries(GALLERIES).forEach(([id,figs])=>{

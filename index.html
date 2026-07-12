@@ -35,16 +35,28 @@ main{max-width:1100px;margin:0 auto;padding:1.8rem;margin-top:96px}
 .section{display:none}.section.active{display:block}
 .page-title{font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:3px}
 .page-sub{font-size:12.5px;color:#555;margin-bottom:1.3rem;line-height:1.5}
-.map-pills{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:1.3rem}
+.map-pills{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:.6rem}
 .pill{padding:7px 16px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer;border:1.5px solid rgba(255,255,255,.6);background:rgba(255,255,255,.75);color:var(--grey);transition:all .2s;backdrop-filter:blur(2px)}
 .pill:hover{border-color:var(--navy);color:var(--navy);background:rgba(255,255,255,.9)}
 .pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+/* ── SLIDESHOW CONTROLS ── */
+.slideshow-bar{display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding:6px 10px;background:rgba(255,255,255,.7);border-radius:10px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.5)}
+.ss-btn{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:background .2s;display:flex;align-items:center;gap:5px}
+.ss-btn:hover{background:#243560}
+.ss-btn.active{background:#c0392b}
+.ss-progress{flex:1;height:4px;background:rgba(26,39,68,.15);border-radius:2px;overflow:hidden}
+.ss-progress-bar{height:100%;width:0;background:var(--orange);transition:width linear}
+.ss-label{font-size:11px;color:#555;white-space:nowrap;min-width:80px;text-align:right}
+.ss-speed{font-size:11px;color:#555;display:flex;align-items:center;gap:4px}
+.ss-speed select{font-size:11px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;background:white}
+/* ── MAP CARD ── */
 .map-card{background:rgba(255,255,255,.88);border:1px solid rgba(255,255,255,.6);border-radius:12px;overflow:hidden;margin-bottom:1rem;backdrop-filter:blur(4px)}
 .map-header{background:rgba(26,39,68,.92);color:#fff;padding:.7rem 1.2rem}
 .mh-title{font-size:14px;font-weight:700}
 .mh-sub{font-size:11px;color:rgba(255,255,255,.55);margin-top:1px}
-.map-img-wrap{width:100%;background:rgba(249,249,249,.9);cursor:zoom-in}
-.map-img-wrap img{width:100%;display:block;object-fit:contain}
+.map-img-wrap{width:100%;background:rgba(249,249,249,.9);cursor:zoom-in;position:relative;overflow:hidden}
+.map-img-wrap img{width:100%;display:block;object-fit:contain;transition:opacity .4s ease}
+.map-img-wrap img.fading{opacity:0}
 .map-caption{padding:.9rem 1.2rem;font-size:12px;color:#555;line-height:1.65;border-top:1px solid rgba(255,255,255,.5);background:rgba(250,250,250,.8)}
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;margin-bottom:1.5rem}
 .gal-card{background:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.6);border-radius:10px;overflow:hidden;cursor:zoom-in;transition:box-shadow .15s,transform .15s;backdrop-filter:blur(3px);transform:translateY(0)}
@@ -175,6 +187,23 @@ footer strong{color:#fff}
   <div class="page-title">Spatial Maps — 2022 to 2025</div>
   <div class="page-sub">GTWR coefficient maps for all predictors across Ubungo's 14 wards. Click to enlarge.</div>
   <div class="map-pills" id="pills"></div>
+  <!-- SLIDESHOW BAR -->
+  <div class="slideshow-bar" id="ss-bar">
+    <button class="ss-btn" id="ss-play-btn" onclick="toggleSlideshow()">▶ Play</button>
+    <button class="ss-btn" onclick="ssPrev()" title="Previous">◀</button>
+    <button class="ss-btn" onclick="ssNext()" title="Next">▶</button>
+    <div class="ss-progress"><div class="ss-progress-bar" id="ss-progress-bar"></div></div>
+    <div class="ss-speed">
+      Speed:
+      <select id="ss-speed" onchange="updateSpeed()">
+        <option value="30">30s</option>
+        <option value="60" selected>60s</option>
+        <option value="90">90s</option>
+        <option value="120">2min</option>
+      </select>
+    </div>
+    <div class="ss-label" id="ss-label">1 / 11</div>
+  </div>
   <div class="map-card">
     <div class="map-header"><div class="mh-title" id="mh-title"></div><div class="mh-sub" id="mh-sub"></div></div>
     <div class="map-img-wrap" id="map-wrap"><img id="map-img" src="" alt=""></div>
@@ -243,6 +272,9 @@ footer strong{color:#fff}
     <br><br>
     <strong>Voice Navigation</strong><br>
     Click the 🎤 button (bottom-right) and say a section name to navigate hands-free. Commands: <em>home, spatial maps, price trends, GTWR results, correlations, trajectories, other figures, help</em>. Requires Chrome or Edge and microphone permission.
+    <br><br>
+    <strong>Slideshow</strong><br>
+    On the Spatial Maps page, click ▶ Play to auto-cycle through all maps. Use ◀ ▶ to step manually. Adjust speed between 30s and 2min per map.
   </div>
 </div>
 </main>
@@ -298,9 +330,11 @@ const MAPS=[
   {label:'Spatial 2040 Projection',file:'spatial2040.jpeg',title:'Spatial Land Price Projection — 2025 to 2040',sub:'4-Panel Choropleth · Ubungo Municipality',cap:'Ward-level projected land price distribution for 2025, 2030, 2035 and 2040 based on GTWR-derived CAGR per ward.'}
 ];
 
+// ── PILLS ────────────────────────────────────────────────────────
 const pillsDiv=document.getElementById('pills');
 const groups=[{label:'Core Predictors',count:7},{label:'Other Factors',count:3},{label:'Projection',count:1}];
 let mapIdx=0;
+const pillBtns=[];
 groups.forEach(g=>{
   const lbl=document.createElement('div');
   lbl.className='pills-group-label';
@@ -311,26 +345,124 @@ groups.forEach(g=>{
     const b=document.createElement('button');
     b.className='pill'+(mapIdx===0?' active':'');
     b.textContent=m.label;
-    b.onclick=(function(map,btn){
+    b.dataset.idx=mapIdx;
+    b.onclick=(function(map,btn,idx){
       return ()=>{
-        document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
-        btn.classList.add('active');loadMap(map);
+        stopSlideshow();
+        setMap(idx,btn);
       };
-    })(m,b);
+    })(m,b,mapIdx);
     pillsDiv.appendChild(b);
+    pillBtns.push(b);
     mapIdx++;
   }
 });
 
-function loadMap(m){
-  document.getElementById('mh-title').textContent=m.title;
-  document.getElementById('mh-sub').textContent=m.sub;
-  const img=document.getElementById('map-img');img.src=m.file;img.alt=m.title;
-  document.getElementById('map-wrap').onclick=()=>openLB(m.file,m.title);
-  document.getElementById('map-cap').textContent=m.cap;
-}
-loadMap(MAPS[0]);
+let currentMapIdx=0;
 
+function setMap(idx,btn){
+  currentMapIdx=idx;
+  const m=MAPS[idx];
+  // Fade out
+  const img=document.getElementById('map-img');
+  img.classList.add('fading');
+  setTimeout(()=>{
+    document.getElementById('mh-title').textContent=m.title;
+    document.getElementById('mh-sub').textContent=m.sub;
+    img.src=m.file; img.alt=m.title;
+    document.getElementById('map-cap').textContent=m.cap;
+    img.classList.remove('fading');
+  },200);
+  document.getElementById('map-wrap').onclick=()=>openLB(m.file,m.title);
+  // Update pills
+  pillBtns.forEach(p=>p.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  else if(pillBtns[idx]) pillBtns[idx].classList.add('active');
+  // Update label
+  document.getElementById('ss-label').textContent=`${idx+1} / ${MAPS.length}`;
+}
+setMap(0, pillBtns[0]);
+
+// ── SLIDESHOW ─────────────────────────────────────────────────────
+let ssPlaying=false;
+let ssTimer=null;
+let ssProgressTimer=null;
+let ssSpeedMs=60000;
+let ssProgressStart=null;
+
+function updateSpeed(){
+  const val=parseInt(document.getElementById('ss-speed').value);
+  ssSpeedMs=val*1000;
+  if(ssPlaying){stopSlideshow();startSlideshow();}
+}
+
+function startSlideshow(){
+  ssPlaying=true;
+  const btn=document.getElementById('ss-play-btn');
+  btn.textContent='⏸ Pause';
+  btn.classList.add('active');
+  scheduleNext();
+}
+
+function scheduleNext(){
+  clearTimeout(ssTimer);
+  // Progress bar
+  const pb=document.getElementById('ss-progress-bar');
+  pb.style.transition='none';
+  pb.style.width='0%';
+  setTimeout(()=>{
+    pb.style.transition=`width ${ssSpeedMs}ms linear`;
+    pb.style.width='100%';
+  },30);
+  ssTimer=setTimeout(()=>{
+    if(!ssPlaying)return;
+    const next=(currentMapIdx+1)%MAPS.length;
+    setMap(next,null);
+    scheduleNext();
+  },ssSpeedMs);
+}
+
+function stopSlideshow(){
+  ssPlaying=false;
+  clearTimeout(ssTimer);
+  const btn=document.getElementById('ss-play-btn');
+  btn.textContent='▶ Play';
+  btn.classList.remove('active');
+  const pb=document.getElementById('ss-progress-bar');
+  pb.style.transition='none';
+  pb.style.width='0%';
+}
+
+function toggleSlideshow(){
+  if(ssPlaying) stopSlideshow();
+  else startSlideshow();
+}
+
+function ssNext(){
+  stopSlideshow();
+  const next=(currentMapIdx+1)%MAPS.length;
+  setMap(next,null);
+}
+
+function ssPrev(){
+  stopSlideshow();
+  const prev=(currentMapIdx-1+MAPS.length)%MAPS.length;
+  setMap(prev,null);
+}
+
+// Stop slideshow when user leaves maps section
+function show(id,el){
+  if(id!=='maps') stopSlideshow();
+  const hero=document.getElementById('hero');
+  hero.classList.remove('active');
+  document.querySelectorAll('.section').forEach(s=>{s.classList.remove('active');s.style.display='';});
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  if(id==='hero'){hero.classList.add('active');}
+  else{document.getElementById(id).classList.add('active');}
+  if(el)el.classList.add('active');
+}
+
+// ── GALLERIES ─────────────────────────────────────────────────────
 const GALLERIES={
   'trends-gal':[
     {file:'Maximum_Land_Price_Trend_fixed.png',label:'Maximum Land Price Trend',sub:'Per ward · 2022–2025'},
@@ -359,7 +491,6 @@ const GALLERIES={
     {file:'2040.jpeg',label:'2040 Growth Zone Map',sub:'Absolute TZS price classification · ≥25M / 18–25M / 12–18M / <12M'}
   ]
 };
-
 Object.entries(GALLERIES).forEach(([id,figs])=>{
   const el=document.getElementById(id);if(!el)return;
   figs.forEach(f=>{el.innerHTML+=`<div class="gal-card" onclick="openLB('${f.file}','${f.label}')"><img src="${f.file}" alt="${f.label}" loading="lazy"><div class="gl">${f.label}</div><div class="gs">${f.sub}</div></div>`;});
@@ -376,16 +507,13 @@ function closeLB(){
   lb.classList.remove('open');lb.style.display='none';
   document.getElementById('lb-img').src='';
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLB();});
-function show(id,el){
-  const hero=document.getElementById('hero');
-  hero.classList.remove('active');
-  document.querySelectorAll('.section').forEach(s=>{s.classList.remove('active');s.style.display='';});
-  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
-  if(id==='hero'){hero.classList.add('active');}
-  else{document.getElementById(id).classList.add('active');}
-  if(el)el.classList.add('active');
-}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeLB();
+  if(e.key==='ArrowRight'&&document.getElementById('maps').classList.contains('active'))ssNext();
+  if(e.key==='ArrowLeft'&&document.getElementById('maps').classList.contains('active'))ssPrev();
+  if(e.key===' '&&document.getElementById('maps').classList.contains('active')){e.preventDefault();toggleSlideshow();}
+});
+
 function toggleAbout(){
   const p=document.getElementById('about-panel');
   const b=document.getElementById('about-btn');
@@ -404,6 +532,8 @@ window.addEventListener('scroll',()=>{
 document.addEventListener('mousemove',e=>{
   if(e.clientY<80){topBar.classList.remove('hidden');mainNav.classList.remove('hidden');}
 });
+
+// ── VOICE ─────────────────────────────────────────────────────────
 const voiceBtn=document.getElementById('voice-btn');
 const voiceToast=document.getElementById('voice-toast');
 const navLinks=document.querySelectorAll('nav a');
@@ -416,6 +546,10 @@ const VOICE_MAP=[
   {keys:['trajectory','trajectories','projection','2040','utabiri'],id:'traj',navIdx:5},
   {keys:['other','other figures','takwimu nyingine','matumizi'],id:'other',navIdx:6},
   {keys:['help','msaada','mawasiliano','contact'],id:'help',navIdx:7},
+  {keys:['play','slideshow','anza','start'],action:'play'},
+  {keys:['stop','pause','simama'],action:'stop'},
+  {keys:['next','inayofuata'],action:'next'},
+  {keys:['previous','iliyopita','rudi'],action:'prev'},
 ];
 function showToast(msg,duration=2500){
   voiceToast.textContent=msg;voiceToast.classList.add('show');
@@ -426,6 +560,10 @@ function handleVoiceCommand(transcript){
   const t=transcript.toLowerCase().trim();
   for(const entry of VOICE_MAP){
     if(entry.keys.some(k=>t.includes(k))){
+      if(entry.action==='play'){startSlideshow();showToast('▶ Slideshow started');return true;}
+      if(entry.action==='stop'){stopSlideshow();showToast('⏸ Slideshow paused');return true;}
+      if(entry.action==='next'){ssNext();showToast('▶ Next map');return true;}
+      if(entry.action==='prev'){ssPrev();showToast('◀ Previous map');return true;}
       const navEl=navLinks[entry.navIdx];
       show(entry.id,navEl);
       showToast('✓ Navigating to: '+navEl.textContent.trim());
@@ -441,7 +579,7 @@ if('webkitSpeechRecognition' in window||'SpeechRecognition' in window){
   recognition=new SR();
   recognition.lang='en-US';recognition.interimResults=false;
   recognition.maxAlternatives=3;recognition.continuous=false;
-  recognition.onstart=()=>{isListening=true;voiceBtn.classList.add('listening');voiceBtn.textContent='🔴';showToast('🎤 Listening… say a section name',4000);};
+  recognition.onstart=()=>{isListening=true;voiceBtn.classList.add('listening');voiceBtn.textContent='🔴';showToast('🎤 Listening…',4000);};
   recognition.onresult=(e)=>{
     const results=Array.from(e.results[0]).map(r=>r.transcript);
     let matched=false;
@@ -449,7 +587,7 @@ if('webkitSpeechRecognition' in window||'SpeechRecognition' in window){
     if(!matched)handleVoiceCommand(results[0]);
   };
   recognition.onerror=(e)=>{
-    if(e.error==='no-speech')showToast('No speech detected — try again');
+    if(e.error==='no-speech')showToast('No speech detected');
     else if(e.error==='not-allowed')showToast('Microphone access denied');
     else showToast('Error: '+e.error);
   };

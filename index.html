@@ -84,6 +84,7 @@ footer strong{color:#fff}
 .help-divider{border:none;border-top:1px solid rgba(26,39,68,.1);margin:1.2rem 0}
 .help-info{background:rgba(255,255,255,.88);border-radius:12px;padding:1.4rem 1.6rem;font-size:13px;color:#444;line-height:1.85;border:1px solid rgba(255,255,255,.6)}
 .help-info strong{color:var(--navy);font-size:14px}
+.pills-group-label{width:100%;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888;padding:4px 2px 2px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -142,7 +143,7 @@ footer strong{color:#fff}
 <main>
 <div id="maps" class="section">
   <div class="page-title">Spatial Maps — 2022 to 2025</div>
-  <div class="page-sub">Each map shows the spatial distribution of a GTWR variable across Ubungo's 14 wards for all four years. Click to enlarge.</div>
+  <div class="page-sub">GTWR coefficient maps for all predictors across Ubungo's 14 wards. Click to enlarge.</div>
   <div class="map-pills" id="pills"></div>
   <div class="map-card">
     <div class="map-header"><div class="mh-title" id="mh-title"></div><div class="mh-sub" id="mh-sub"></div></div>
@@ -222,21 +223,47 @@ footer strong{color:#fff}
 </footer>
 <script>
 const MAPS=[
+  // ── Core GTWR predictors ──────────────────────────────────────
   {label:'BRT Accessibility',file:'GTWR_BRT_coef_EDITED_STYLE.png',title:'GTWR BRT Accessibility Coefficient Distribution',sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',cap:'Spatial distribution of the BRT accessibility coefficient. Pearson r = −0.623 with log(price). BRT collinearity with road distance (r = 0.98) addressed via ridge regularisation (λ = 0.05).'},
   {label:'CBD Accessibility',file:'GTWR_CBD_coef_EDITED_STYLE.png',title:'GTWR CBD Accessibility Coefficient Distribution',sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',cap:'Weak global influence (Pearson r = −0.156) due to Ubungo\'s narrow CBD distance range. Local coefficients reveal stronger effects near the urban core.'},
   {label:'Road Accessibility',file:'GTWR_Road_coef_EDITED_STYLE.png',title:'GTWR Road Accessibility Coefficient Distribution',sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',cap:'Road proximity premium. Pearson r = −0.513 with log(price). Core wards show strengthening road coefficients over the study period.'},
   {label:'Night-time Light',file:'GTWR_NTL_norm_EDITED_STYLE.png',title:'GTWR Night-time Light Coefficient Distribution',sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',cap:'Strongest predictor (Pearson r = +0.884). Higher NTL reflects infrastructure density and economic activity. Coefficients strengthen in core wards year on year.'},
   {label:'Population Density',file:'GTWR_Population_coef_EDITED_STYLE.png',title:'GTWR Population Density Coefficient Distribution',sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',cap:'Pearson r = +0.613. Positive in dense well-serviced inner wards; weak in peripheral wards where infrastructure lags population growth.'},
   {label:'Predicted Price',file:'GTWR_predicted_price.png',title:'GTWR Predicted Land Price Distribution',sub:'Model Output · 2022–2025 · Ubungo Municipality',cap:'GTWR model-fitted residential land prices. R² = 0.8912. Strong core–periphery gradient — Sinza highest, Kibamba lowest.'},
-  {label:'Factor Correlation',file:'GTWR_Same_Factors_Correlation_With_NTL.png',title:'GTWR Factor Correlation with NTL',sub:'Correlation Analysis · Ubungo Municipality',cap:'Inter-predictor relationships including night-time light. Informed ridge regularisation decisions for collinear variables (BRT & road, r = 0.98).'}
+  {label:'Factor Correlation',file:'GTWR_Same_Factors_Correlation_With_NTL.png',title:'GTWR Factor Correlation with NTL',sub:'Correlation Analysis · Ubungo Municipality',cap:'Inter-predictor relationships including night-time light. Informed ridge regularisation decisions for collinear variables (BRT & road, r = 0.98).'},
+  // ── Other factors ─────────────────────────────────────────────
+  {label:'Health Accessibility',file:'GTWR_Health_coef_EDITED_STYLE.png',title:'GTWR Health Accessibility Coefficient Distribution',sub:'Other Factor · 2022–2025 · Ubungo Municipality',cap:'Spatial distribution of the health facility accessibility coefficient across Ubungo\'s 14 wards, 2022–2025.'},
+  {label:'Police Accessibility',file:'GTWR_Police_coef_EDITED_STYLE.png',title:'GTWR Police Accessibility Coefficient Distribution',sub:'Other Factor · 2022–2025 · Ubungo Municipality',cap:'Spatial distribution of the police station accessibility coefficient across Ubungo\'s 14 wards, 2022–2025.'},
+  {label:'School Accessibility',file:'GTWR_School_coef_EDITED_STYLE.png',title:'GTWR School Accessibility Coefficient Distribution',sub:'Other Factor · 2022–2025 · Ubungo Municipality',cap:'Spatial distribution of the school accessibility coefficient across Ubungo\'s 14 wards, 2022–2025.'}
 ];
 const pillsDiv=document.getElementById('pills');
-MAPS.forEach((m,i)=>{
-  const b=document.createElement('button');
-  b.className='pill'+(i===0?' active':'');
-  b.textContent=m.label;
-  b.onclick=()=>{document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));b.classList.add('active');loadMap(m);};
-  pillsDiv.appendChild(b);
+// Group labels
+const groups=[
+  {label:'Core Predictors',count:7},
+  {label:'Other Factors',count:3}
+];
+let mapIdx=0;
+groups.forEach(g=>{
+  const lbl=document.createElement('div');
+  lbl.className='pills-group-label';
+  lbl.textContent=g.label;
+  pillsDiv.appendChild(lbl);
+  for(let i=0;i<g.count;i++){
+    const m=MAPS[mapIdx];
+    const b=document.createElement('button');
+    b.className='pill'+(mapIdx===0?' active':'');
+    b.textContent=m.label;
+    b.dataset.idx=mapIdx;
+    b.onclick=(function(map,btn){
+      return ()=>{
+        document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+        btn.classList.add('active');
+        loadMap(map);
+      };
+    })(m,b);
+    pillsDiv.appendChild(b);
+    mapIdx++;
+  }
 });
 function loadMap(m){
   document.getElementById('mh-title').textContent=m.title;

@@ -39,7 +39,6 @@ main{max-width:1100px;margin:0 auto;padding:1.8rem;margin-top:96px}
 .pill{padding:7px 16px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer;border:1.5px solid rgba(255,255,255,.6);background:rgba(255,255,255,.75);color:var(--grey);transition:all .2s;backdrop-filter:blur(2px)}
 .pill:hover{border-color:var(--navy);color:var(--navy);background:rgba(255,255,255,.9)}
 .pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}
-/* ── SLIDESHOW CONTROLS ── */
 .slideshow-bar{display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding:6px 10px;background:rgba(255,255,255,.7);border-radius:10px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.5)}
 .ss-btn{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:background .2s;display:flex;align-items:center;gap:5px}
 .ss-btn:hover{background:#243560}
@@ -49,7 +48,6 @@ main{max-width:1100px;margin:0 auto;padding:1.8rem;margin-top:96px}
 .ss-label{font-size:11px;color:#555;white-space:nowrap;min-width:80px;text-align:right}
 .ss-speed{font-size:11px;color:#555;display:flex;align-items:center;gap:4px}
 .ss-speed select{font-size:11px;border:1px solid #ccc;border-radius:4px;padding:2px 4px;background:white}
-/* ── MAP CARD ── */
 .map-card{background:rgba(255,255,255,.88);border:1px solid rgba(255,255,255,.6);border-radius:12px;overflow:hidden;margin-bottom:1rem;backdrop-filter:blur(4px)}
 .map-header{background:rgba(26,39,68,.92);color:#fff;padding:.7rem 1.2rem}
 .mh-title{font-size:14px;font-weight:700}
@@ -117,6 +115,13 @@ footer strong{color:#fff}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.5)}50%{box-shadow:0 0 0 12px rgba(192,57,43,0)}}
 #voice-toast{position:fixed;bottom:88px;right:24px;z-index:501;background:rgba(26,39,68,.95);color:#fff;font-size:12.5px;padding:8px 14px;border-radius:8px;max-width:220px;text-align:center;line-height:1.5;display:none;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.15)}
 #voice-toast.show{display:block}
+/* Search */
+.search-input{width:100%;padding:12px 18px;border-radius:10px;border:1.5px solid rgba(26,39,68,.2);font-size:15px;outline:none;background:rgba(255,255,255,.92);transition:border .2s;margin-bottom:1rem}
+.search-input:focus{border-color:var(--orange)}
+.ward-stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;background:#eee}
+.ward-stat{background:white;padding:.8rem 1rem}
+.ward-stat-label{font-size:10px;color:var(--orange);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.ward-stat-val{font-size:13px;color:#222;font-weight:500}
 </style>
 </head>
 <body>
@@ -145,6 +150,7 @@ footer strong{color:#fff}
   <a onclick="show('corr',this)">Correlations</a>
   <a onclick="show('traj',this)">Trajectories &amp; Projection</a>
   <a onclick="show('other',this)">Other Figures</a>
+  <a onclick="show('search',this)">🔍 Ward Search</a>
   <a onclick="show('help',this)">Help</a>
 </nav>
 <div id="hero" class="section active">
@@ -187,21 +193,12 @@ footer strong{color:#fff}
   <div class="page-title">Spatial Maps — 2022 to 2025</div>
   <div class="page-sub">GTWR coefficient maps for all predictors across Ubungo's 14 wards. Click to enlarge.</div>
   <div class="map-pills" id="pills"></div>
-  <!-- SLIDESHOW BAR -->
   <div class="slideshow-bar" id="ss-bar">
     <button class="ss-btn" id="ss-play-btn" onclick="toggleSlideshow()">▶ Play</button>
-    <button class="ss-btn" onclick="ssPrev()" title="Previous">◀</button>
-    <button class="ss-btn" onclick="ssNext()" title="Next">▶</button>
+    <button class="ss-btn" onclick="ssPrev()">◀</button>
+    <button class="ss-btn" onclick="ssNext()">▶</button>
     <div class="ss-progress"><div class="ss-progress-bar" id="ss-progress-bar"></div></div>
-    <div class="ss-speed">
-      Speed:
-      <select id="ss-speed" onchange="updateSpeed()">
-        <option value="30">30s</option>
-        <option value="60" selected>60s</option>
-        <option value="90">90s</option>
-        <option value="120">2min</option>
-      </select>
-    </div>
+    <div class="ss-speed">Speed:<select id="ss-speed" onchange="updateSpeed()"><option value="30">30s</option><option value="60" selected>60s</option><option value="90">90s</option><option value="120">2min</option></select></div>
     <div class="ss-label" id="ss-label">1 / 11</div>
   </div>
   <div class="map-card">
@@ -235,6 +232,21 @@ footer strong{color:#fff}
   <div class="page-sub">Land use choropleth, petal map and price comparison — Ubungo Municipality.</div>
   <div class="gallery" id="other-gal"></div>
 </div>
+
+<!-- ══ WARD SEARCH ══════════════════════════════════════════════ -->
+<div id="search" class="section">
+  <div class="page-title">🔍 Ward Price Search</div>
+  <div class="page-sub">Search any ward in Ubungo Municipality — see full price history, location details and 2040 projection.</div>
+  <input class="search-input" id="ward-input" type="text"
+    placeholder="Type ward name e.g. Goba, Sinza, Kibamba, Manzese..."
+    oninput="wardSearch(this.value)">
+  <div style="margin-bottom:1.2rem">
+    <div style="font-size:11px;font-weight:700;color:#888;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">Quick Select</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px" id="quick-btns"></div>
+  </div>
+  <div id="ward-result"></div>
+</div>
+
 <div id="help" class="section">
   <div class="page-title">Help &amp; Contact</div>
   <div class="page-sub">For questions or feedback about this research dashboard, please contact the authors directly using the details below.</div>
@@ -271,10 +283,10 @@ footer strong{color:#fff}
     This research dashboard was developed as a supplementary output to the Bachelor's dissertation submitted to the Department of Geospatial Science and Technology, Ardhi University, Dar es Salaam, 2026. All spatial data processing and cartographic output was carried out in ArcMap 10.8. Statistical modelling, covariate construction, and 2040 projections were implemented in Python 3 using the pandas, numpy, scipy, statsmodels, and mgwr libraries. The dashboard is hosted on GitHub Pages at <a href="https://DEBRUYNE007445.github.io/GTWR-RESEARCH-DASHBOARD" target="_blank" style="color:var(--orange)">DEBRUYNE007445.github.io/GTWR-RESEARCH-DASHBOARD</a>.
     <br><br>
     <strong>Voice Navigation</strong><br>
-    Click the 🎤 button (bottom-right) and say a section name to navigate hands-free. Commands: <em>home, spatial maps, price trends, GTWR results, correlations, trajectories, other figures, help</em>. Requires Chrome or Edge and microphone permission.
+    Click the 🎤 button (bottom-right) and say a section name. Commands: <em>home, spatial maps, price trends, GTWR results, correlations, trajectories, other figures, ward search, help</em>. Also say: <em>play, stop, next, previous</em> on the Spatial Maps page.
     <br><br>
-    <strong>Slideshow</strong><br>
-    On the Spatial Maps page, click ▶ Play to auto-cycle through all maps. Use ◀ ▶ to step manually. Adjust speed between 30s and 2min per map.
+    <strong>Ward Search</strong><br>
+    Use the 🔍 Ward Search tab to look up any ward — full price data from 2022 to 2040, location coordinates, area, population density, NTL, distances to road/BRT/CBD and 2040 growth zone.
   </div>
 </div>
 </main>
@@ -289,6 +301,7 @@ footer strong{color:#fff}
   Prepared by <strong>Centy de Bruyne &amp; Preciouce Luy</strong> &nbsp;·&nbsp; GIS &amp; RS III &nbsp;·&nbsp; Ardhi University &nbsp;·&nbsp; 2026
 </footer>
 <script>
+// ── INTRO ────────────────────────────────────────────────────────
 const INTRO_DURATION=6000;
 let introDismissed=false;
 function dismissIntro(){
@@ -316,6 +329,7 @@ window.addEventListener('load',()=>{
 });
 if('speechSynthesis' in window){window.speechSynthesis.onvoiceschanged=()=>{};}
 
+// ── MAPS ─────────────────────────────────────────────────────────
 const MAPS=[
   {label:'BRT Accessibility',file:'GTWR_BRT_coef_EDITED_STYLE.png',title:'GTWR BRT Accessibility Coefficient Distribution',sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',cap:'Spatial distribution of the BRT accessibility coefficient. Pearson r = −0.623 with log(price). BRT collinearity with road distance (r = 0.98) addressed via ridge regularisation (λ = 0.05).'},
   {label:'CBD Accessibility',file:'GTWR_CBD_coef_EDITED_STYLE.png',title:'GTWR CBD Accessibility Coefficient Distribution',sub:'GTWR Coefficient · 2022–2025 · Ubungo Municipality',cap:'Weak global influence (Pearson r = −0.156) due to Ubungo\'s narrow CBD distance range. Local coefficients reveal stronger effects near the urban core.'},
@@ -330,7 +344,6 @@ const MAPS=[
   {label:'Spatial 2040 Projection',file:'spatial2040.jpeg',title:'Spatial Land Price Projection — 2025 to 2040',sub:'4-Panel Choropleth · Ubungo Municipality',cap:'Ward-level projected land price distribution for 2025, 2030, 2035 and 2040 based on GTWR-derived CAGR per ward.'}
 ];
 
-// ── PILLS ────────────────────────────────────────────────────────
 const pillsDiv=document.getElementById('pills');
 const groups=[{label:'Core Predictors',count:7},{label:'Other Factors',count:3},{label:'Projection',count:1}];
 let mapIdx=0;
@@ -345,13 +358,7 @@ groups.forEach(g=>{
     const b=document.createElement('button');
     b.className='pill'+(mapIdx===0?' active':'');
     b.textContent=m.label;
-    b.dataset.idx=mapIdx;
-    b.onclick=(function(map,btn,idx){
-      return ()=>{
-        stopSlideshow();
-        setMap(idx,btn);
-      };
-    })(m,b,mapIdx);
+    b.onclick=(function(map,btn,idx){return()=>{stopSlideshow();setMap(idx,btn);};})(m,b,mapIdx);
     pillsDiv.appendChild(b);
     pillBtns.push(b);
     mapIdx++;
@@ -359,108 +366,52 @@ groups.forEach(g=>{
 });
 
 let currentMapIdx=0;
-
 function setMap(idx,btn){
   currentMapIdx=idx;
   const m=MAPS[idx];
-  // Fade out
   const img=document.getElementById('map-img');
   img.classList.add('fading');
   setTimeout(()=>{
     document.getElementById('mh-title').textContent=m.title;
     document.getElementById('mh-sub').textContent=m.sub;
-    img.src=m.file; img.alt=m.title;
+    img.src=m.file;img.alt=m.title;
     document.getElementById('map-cap').textContent=m.cap;
     img.classList.remove('fading');
   },200);
   document.getElementById('map-wrap').onclick=()=>openLB(m.file,m.title);
-  // Update pills
   pillBtns.forEach(p=>p.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  else if(pillBtns[idx]) pillBtns[idx].classList.add('active');
-  // Update label
+  if(btn)btn.classList.add('active');
+  else if(pillBtns[idx])pillBtns[idx].classList.add('active');
   document.getElementById('ss-label').textContent=`${idx+1} / ${MAPS.length}`;
 }
-setMap(0, pillBtns[0]);
+setMap(0,pillBtns[0]);
 
 // ── SLIDESHOW ─────────────────────────────────────────────────────
-let ssPlaying=false;
-let ssTimer=null;
-let ssProgressTimer=null;
-let ssSpeedMs=60000;
-let ssProgressStart=null;
-
-function updateSpeed(){
-  const val=parseInt(document.getElementById('ss-speed').value);
-  ssSpeedMs=val*1000;
-  if(ssPlaying){stopSlideshow();startSlideshow();}
-}
-
+let ssPlaying=false,ssTimer=null,ssSpeedMs=60000;
+function updateSpeed(){ssSpeedMs=parseInt(document.getElementById('ss-speed').value)*1000;if(ssPlaying){stopSlideshow();startSlideshow();}}
 function startSlideshow(){
   ssPlaying=true;
   const btn=document.getElementById('ss-play-btn');
-  btn.textContent='⏸ Pause';
-  btn.classList.add('active');
+  btn.textContent='⏸ Pause';btn.classList.add('active');
   scheduleNext();
 }
-
 function scheduleNext(){
   clearTimeout(ssTimer);
-  // Progress bar
   const pb=document.getElementById('ss-progress-bar');
-  pb.style.transition='none';
-  pb.style.width='0%';
-  setTimeout(()=>{
-    pb.style.transition=`width ${ssSpeedMs}ms linear`;
-    pb.style.width='100%';
-  },30);
-  ssTimer=setTimeout(()=>{
-    if(!ssPlaying)return;
-    const next=(currentMapIdx+1)%MAPS.length;
-    setMap(next,null);
-    scheduleNext();
-  },ssSpeedMs);
+  pb.style.transition='none';pb.style.width='0%';
+  setTimeout(()=>{pb.style.transition=`width ${ssSpeedMs}ms linear`;pb.style.width='100%';},30);
+  ssTimer=setTimeout(()=>{if(!ssPlaying)return;const next=(currentMapIdx+1)%MAPS.length;setMap(next,null);scheduleNext();},ssSpeedMs);
 }
-
 function stopSlideshow(){
-  ssPlaying=false;
-  clearTimeout(ssTimer);
+  ssPlaying=false;clearTimeout(ssTimer);
   const btn=document.getElementById('ss-play-btn');
-  btn.textContent='▶ Play';
-  btn.classList.remove('active');
+  btn.textContent='▶ Play';btn.classList.remove('active');
   const pb=document.getElementById('ss-progress-bar');
-  pb.style.transition='none';
-  pb.style.width='0%';
+  pb.style.transition='none';pb.style.width='0%';
 }
-
-function toggleSlideshow(){
-  if(ssPlaying) stopSlideshow();
-  else startSlideshow();
-}
-
-function ssNext(){
-  stopSlideshow();
-  const next=(currentMapIdx+1)%MAPS.length;
-  setMap(next,null);
-}
-
-function ssPrev(){
-  stopSlideshow();
-  const prev=(currentMapIdx-1+MAPS.length)%MAPS.length;
-  setMap(prev,null);
-}
-
-// Stop slideshow when user leaves maps section
-function show(id,el){
-  if(id!=='maps') stopSlideshow();
-  const hero=document.getElementById('hero');
-  hero.classList.remove('active');
-  document.querySelectorAll('.section').forEach(s=>{s.classList.remove('active');s.style.display='';});
-  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
-  if(id==='hero'){hero.classList.add('active');}
-  else{document.getElementById(id).classList.add('active');}
-  if(el)el.classList.add('active');
-}
+function toggleSlideshow(){if(ssPlaying)stopSlideshow();else startSlideshow();}
+function ssNext(){stopSlideshow();setMap((currentMapIdx+1)%MAPS.length,null);}
+function ssPrev(){stopSlideshow();setMap((currentMapIdx-1+MAPS.length)%MAPS.length,null);}
 
 // ── GALLERIES ─────────────────────────────────────────────────────
 const GALLERIES={
@@ -496,6 +447,104 @@ Object.entries(GALLERIES).forEach(([id,figs])=>{
   figs.forEach(f=>{el.innerHTML+=`<div class="gal-card" onclick="openLB('${f.file}','${f.label}')"><img src="${f.file}" alt="${f.label}" loading="lazy"><div class="gl">${f.label}</div><div class="gs">${f.sub}</div></div>`;});
 });
 
+// ── WARD DATA ─────────────────────────────────────────────────────
+const WARD_DATA={"GOBA":{"name":"Goba","lat":-6.7669,"lon":39.2935,"area_km2":47.2,"pop_density":3200,"D_CBD_m":6152,"D_BRT_m":6642,"D_ROAD_m":6319,"NTL":13.05,"Local_R2":0.038,"CAGR_pct":23.3,"growth_zone":"Low","type":"Residential","observed":{"2022":265000,"2023":315769,"2024":390385,"2025":496154},"projected":{"2022":265000,"2023":315769,"2024":390385,"2025":496154,"2026":611514,"2027":753697,"2028":928938,"2029":1144925,"2030":1411130,"2031":1739231,"2032":2143619,"2033":2642030,"2034":3256326,"2035":4013451,"2036":4946615,"2037":6096749,"2038":7514299,"2039":9261443,"2040":11414813}},"KIBAMBA":{"name":"Kibamba","lat":-6.7605,"lon":39.2386,"area_km2":45.0,"pop_density":2155,"D_CBD_m":8323,"D_BRT_m":2275,"D_ROAD_m":1247,"NTL":5.91,"Local_R2":0.906,"CAGR_pct":26.0,"growth_zone":"Low","type":"Residential","observed":{"2022":117143,"2023":142857,"2024":178571,"2025":234286},"projected":{"2022":117143,"2023":142857,"2024":178571,"2025":234286,"2026":295182,"2027":371905,"2028":468571,"2029":590363,"2030":743811,"2031":937143,"2032":1180726,"2033":1487622,"2034":1874286,"2035":2361452,"2036":2975243,"2037":3748571,"2038":4722904,"2039":5950486,"2040":7497143}},"KIMARA":{"name":"Kimara","lat":-6.7922,"lon":39.2465,"area_km2":12.0,"pop_density":8684,"D_CBD_m":5734,"D_BRT_m":1910,"D_ROAD_m":1616,"NTL":12.42,"Local_R2":0.661,"CAGR_pct":20.8,"growth_zone":"High","type":"Residential","observed":{"2022":611364,"2023":706818,"2024":863636,"2025":1077273},"projected":{"2022":611364,"2023":706818,"2024":863636,"2025":1077273,"2026":1301171,"2027":1571604,"2028":1898243,"2029":2292770,"2030":2769294,"2031":3344859,"2032":4040048,"2033":4879723,"2034":5893915,"2035":7118894,"2036":8598471,"2037":10385560,"2038":12544074,"2039":15151209,"2040":18300206}},"KWEMBE":{"name":"Kwembe","lat":-6.7575,"lon":39.2294,"area_km2":60.4,"pop_density":1606,"D_CBD_m":10089,"D_BRT_m":3534,"D_ROAD_m":2581,"NTL":5.2,"Local_R2":0.91,"CAGR_pct":25.3,"growth_zone":"Low","type":"Residential","observed":{"2022":166000,"2023":199000,"2024":251000,"2025":326500},"projected":{"2022":166000,"2023":199000,"2024":251000,"2025":326500,"2026":409080,"2027":512546,"2028":642182,"2029":804606,"2030":1008111,"2031":1263087,"2032":1582554,"2033":1982821,"2034":2484325,"2035":3112673,"2036":3899946,"2037":4886339,"2038":6122215,"2039":7670676,"2040":9610781}},"MABIBO":{"name":"Mabibo","lat":-6.8051,"lon":39.2555,"area_km2":6.0,"pop_density":13409,"D_CBD_m":3940,"D_BRT_m":639,"D_ROAD_m":148,"NTL":21.55,"Local_R2":0.741,"CAGR_pct":19.3,"growth_zone":"Very High","type":"Residential","observed":{"2022":1057143,"2023":1250000,"2024":1485714,"2025":1792857},"projected":{"2022":1057143,"2023":1250000,"2024":1485714,"2025":1792857,"2026":2138043,"2027":2549688,"2028":3040589,"2029":3626005,"2030":4324133,"2031":5156674,"2032":6149508,"2033":7333496,"2034":8745441,"2035":10429233,"2036":12437212,"2037":14831795,"2038":17687416,"2039":21092839,"2040":25153922}},"MAKUBURI":{"name":"Makuburi","lat":-6.8038,"lon":39.2174,"area_km2":5.5,"pop_density":17636,"D_CBD_m":8094,"D_BRT_m":377,"D_ROAD_m":218,"NTL":12.68,"Local_R2":0.458,"CAGR_pct":18.8,"growth_zone":"High","type":"Residential","observed":{"2022":1000000,"2023":1161111,"2024":1361111,"2025":1677778},"projected":{"2022":1000000,"2023":1161111,"2024":1361111,"2025":1677778,"2026":1993636,"2027":2368958,"2028":2814938,"2029":3344879,"2030":3974585,"2031":4722841,"2032":5611963,"2033":6668471,"2034":7923877,"2035":9415627,"2036":11188213,"2037":13294506,"2038":15797329,"2039":18771334,"2040":22305226}},"MAKURUMLA":{"name":"Makurumla","lat":-6.8067,"lon":39.2466,"area_km2":2.5,"pop_density":38798,"D_CBD_m":4845,"D_BRT_m":365,"D_ROAD_m":259,"NTL":18.95,"Local_R2":0.718,"CAGR_pct":18.6,"growth_zone":"Very High","type":"Residential","observed":{"2022":1187500,"2023":1381250,"2024":1631250,"2025":1981250},"projected":{"2022":1187500,"2023":1381250,"2024":1631250,"2025":1981250,"2026":2349856,"2027":2787039,"2028":3305559,"2029":3920548,"2030":4649955,"2031":5515065,"2032":6541126,"2033":7758082,"2034":9201450,"2035":10913352,"2036":12943748,"2037":15351893,"2038":18208066,"2039":21595621,"2040":25613421}},"MANZESE":{"name":"Manzese","lat":-6.7983,"lon":39.2427,"area_km2":2.5,"pop_density":38798,"D_CBD_m":5551,"D_BRT_m":713,"D_ROAD_m":520,"NTL":21.2,"Local_R2":0.731,"CAGR_pct":18.3,"growth_zone":"Very High","type":"Residential","observed":{"2022":1294444,"2023":1505556,"2024":1772222,"2025":2144444},"projected":{"2022":1294444,"2023":1505556,"2024":1772222,"2025":2144444,"2026":2537417,"2027":3002403,"2028":3552599,"2029":4203619,"2030":4973939,"2031":5885421,"2032":6963935,"2033":8240087,"2034":9750097,"2035":11536819,"2036":13650960,"2037":16152522,"2038":19112498,"2039":22614896,"2040":26759113}},"MBEZI":{"name":"Mbezi","lat":-6.7869,"lon":39.2858,"area_km2":28.0,"pop_density":5518,"D_CBD_m":3269,"D_BRT_m":4426,"D_ROAD_m":3859,"NTL":7.54,"Local_R2":0.72,"CAGR_pct":22.2,"growth_zone":"Moderate","type":"Residential","observed":{"2022":429167,"2023":500000,"2024":625000,"2025":783333},"projected":{"2022":429167,"2023":500000,"2024":625000,"2025":783333,"2026":957312,"2027":1169931,"2028":1429773,"2029":1747327,"2030":2135409,"2031":2609684,"2032":3189295,"2033":3897639,"2034":4763306,"2035":5821238,"2036":7114137,"2037":8694190,"2038":10625172,"2039":12985027,"2040":15869006}},"MBURAHATI":{"name":"Mburahati","lat":-6.8006,"lon":39.248,"area_km2":2.8,"pop_density":34641,"D_CBD_m":4884,"D_BRT_m":376,"D_ROAD_m":332,"NTL":17.91,"Local_R2":0.74,"CAGR_pct":17.2,"growth_zone":"Very High","type":"Residential","observed":{"2022":1500000,"2023":1727778,"2024":2038889,"2025":2416667},"projected":{"2022":1500000,"2023":1727778,"2024":2038889,"2025":2416667,"2026":2833078,"2027":3321241,"2028":3893519,"2029":4564404,"2030":5350889,"2031":6272891,"2032":7353762,"2033":8620876,"2034":10106324,"2035":11847728,"2036":13889189,"2037":16282411,"2038":19088006,"2039":22377027,"2040":26232774}},"MSIGANI":{"name":"Msigani","lat":-6.7694,"lon":39.2349,"area_km2":18.0,"pop_density":4953,"D_CBD_m":7942,"D_BRT_m":1168,"D_ROAD_m":374,"NTL":12.48,"Local_R2":0.871,"CAGR_pct":23.6,"growth_zone":"Moderate","type":"Residential","observed":{"2022":353571,"2023":417857,"2024":525000,"2025":667857},"projected":{"2022":353571,"2023":417857,"2024":525000,"2025":667857,"2026":825567,"2027":1020519,"2028":1261508,"2029":1559405,"2030":1927647,"2031":2382848,"2032":2945542,"2033":3641112,"2034":4500936,"2035":5563801,"2036":6877656,"2037":8501767,"2038":10509403,"2039":12991127,"2040":16058894}},"SARANGA":{"name":"Saranga","lat":-6.7926,"lon":39.2714,"area_km2":30.0,"pop_density":5202,"D_CBD_m":3268,"D_BRT_m":2766,"D_ROAD_m":2289,"NTL":12.04,"Local_R2":0.738,"CAGR_pct":24.6,"growth_zone":"Low","type":"Residential","observed":{"2022":195714,"2023":238571,"2024":294286,"2025":378571},"projected":{"2022":195714,"2023":238571,"2024":294286,"2025":378571,"2026":471690,"2027":587712,"2028":732273,"2029":912392,"2030":1136816,"2031":1416441,"2032":1764846,"2033":2198950,"2034":2739831,"2035":3413754,"2036":4253443,"2037":5299673,"2038":6603246,"2039":8227463,"2040":10251192}},"SINZA":{"name":"Sinza","lat":-6.7832,"lon":39.2401,"area_km2":3.3,"pop_density":10221,"D_CBD_m":6550,"D_BRT_m":1388,"D_ROAD_m":1158,"NTL":28.89,"Local_R2":0.816,"CAGR_pct":18.6,"growth_zone":"Very High","type":"Residential","observed":{"2022":1937500,"2023":2262500,"2024":2687500,"2025":3231250},"projected":{"2022":1937500,"2023":2262500,"2024":2687500,"2025":3231250,"2026":3831894,"2027":4544190,"2028":5388891,"2029":6390611,"2030":7578536,"2031":8987280,"2032":10657889,"2033":12639042,"2034":14988463,"2035":17774609,"2036":21078660,"2037":24996889,"2038":29643461,"2039":35153766,"2040":41688360}},"UBUNGO":{"name":"Ubungo","lat":-6.7893,"lon":39.2328,"area_km2":3.3,"pop_density":14435,"D_CBD_m":6946,"D_BRT_m":1102,"D_ROAD_m":1030,"NTL":18.06,"Local_R2":0.753,"CAGR_pct":18.8,"growth_zone":"Very High","type":"Residential","observed":{"2022":1722727,"2023":1990909,"2024":2381818,"2025":2890909},"projected":{"2022":1722727,"2023":1990909,"2024":2381818,"2025":2890909,"2026":3435372,"2027":4082376,"2028":4851235,"2029":5764898,"2030":6850637,"2031":8140859,"2032":9674077,"2033":11496055,"2034":13661178,"2035":16234071,"2036":19291534,"2037":22924827,"2038":27242400,"2039":32373128,"2040":38470157}}};
+
+const ZONE_COLOR={'Very High':'#8B0000','High':'#d42020','Moderate':'#e87070','Low':'#f5b8b8'};
+function fmt(n){return Number(n).toLocaleString('en-US');}
+function fmtM(n){return (n/1e6).toFixed(2)+'M';}
+
+// Quick buttons
+const qb=document.getElementById('quick-btns');
+Object.keys(WARD_DATA).sort().forEach(k=>{
+  const btn=document.createElement('button');
+  btn.className='pill';
+  btn.textContent=WARD_DATA[k].name;
+  btn.onclick=()=>{document.getElementById('ward-input').value=WARD_DATA[k].name;showWard(k);};
+  qb.appendChild(btn);
+});
+
+function wardSearch(val){
+  const v=val.trim().toUpperCase();
+  if(!v){document.getElementById('ward-result').innerHTML='';return;}
+  const key=Object.keys(WARD_DATA).find(k=>k.startsWith(v)||WARD_DATA[k].name.toUpperCase().startsWith(v));
+  if(key)showWard(key);
+}
+
+function showWard(key){
+  const d=WARD_DATA[key];
+  const zc=ZONE_COLOR[d.growth_zone]||'#888';
+  const growthObs=(((d.observed['2025']-d.observed['2022'])/d.observed['2022'])*100).toFixed(1);
+  const growthTotal=(((d.projected['2040']-d.observed['2022'])/d.observed['2022'])*100).toFixed(0);
+
+  let priceRows='';
+  for(let yr=2022;yr<=2040;yr++){
+    const p=d.projected[String(yr)];
+    const isObs=yr<=2025;
+    const prev=yr>2022?d.projected[String(yr-1)]:null;
+    const chg=prev?((p-prev)/prev*100).toFixed(1):'-';
+    priceRows+=`<tr style="background:${isObs?'rgba(26,39,68,.04)':'rgba(224,123,57,.03)'}">
+      <td style="padding:6px 12px;font-weight:700;color:${isObs?'var(--navy)':'#888'}">${yr}${isObs?' ✓':''}</td>
+      <td style="padding:6px 12px;text-align:right;font-weight:500">${fmt(p)}</td>
+      <td style="padding:6px 12px;text-align:right;color:#555">${fmtM(p)}</td>
+      <td style="padding:6px 12px;text-align:right;color:${chg>0?'#2a7a2a':'#888'}">${chg!=='-'?'+'+chg+'%':'-'}</td>
+    </tr>`;
+  }
+
+  const stats=[
+    ['📍 Coordinates',`Lat ${d.lat} · Lon ${d.lon}`],
+    ['🏘 Land Use Type',d.type],
+    ['📐 Area',`${d.area_km2} km²`],
+    ['👥 Population Density',`${fmt(d.pop_density)} persons/km²`],
+    ['💡 Night-time Light (NTL)',`${d.NTL} radiance units`],
+    ['🛣 Distance to Road',`${fmt(d.D_ROAD_m)} m`],
+    ['🚌 Distance to BRT Terminal',`${fmt(d.D_BRT_m)} m`],
+    ['🏙 Distance to CBD (Kariakoo)',`${fmt(d.D_CBD_m)} m`],
+    ['📈 GTWR Local R²',d.Local_R2],
+    ['📊 Observed CAGR (2022–2025)',`${d.CAGR_pct}% per year`],
+    ['📉 Price Growth 2022–2025',`+${growthObs}%`],
+    ['🏷 2022 Base Price',`${fmt(d.observed['2022'])} TZS`],
+    ['🏷 2025 Price',`${fmt(d.observed['2025'])} TZS`],
+    ['🔮 2040 Projected Price',`${fmtM(d.projected['2040'])} TZS`],
+    ['📈 Total Growth 2022–2040',`+${growthTotal}%`],
+  ];
+
+  document.getElementById('ward-result').innerHTML=`
+  <div style="background:rgba(255,255,255,.92);border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.6);backdrop-filter:blur(4px);margin-bottom:1.5rem">
+    <div style="background:rgba(26,39,68,.92);color:#fff;padding:1.2rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+      <div>
+        <div style="font-size:1.5rem;font-weight:800;letter-spacing:.04em">${d.name.toUpperCase()}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:2px">Ubungo Municipality · Dar es Salaam · Tanzania · Residential Land</div>
+      </div>
+      <div style="background:${zc};color:#fff;padding:7px 20px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.06em">${d.growth_zone.toUpperCase()} GROWTH ZONE</div>
+    </div>
+    <div class="ward-stat-grid">
+      ${stats.map(([l,v])=>`<div class="ward-stat"><div class="ward-stat-label">${l}</div><div class="ward-stat-val">${v}</div></div>`).join('')}
+    </div>
+    <div style="padding:1.2rem 1.5rem">
+      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:.8rem">
+        📅 Full Price History &amp; Projection (2022–2040)
+        <span style="font-size:11px;font-weight:400;color:#888;margin-left:8px">✓ = observed · rest = GTWR-derived CAGR projection</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:rgba(26,39,68,.08)">
+              <th style="padding:8px 12px;text-align:left;font-weight:700;color:var(--navy)">Year</th>
+              <th style="padding:8px 12px;text-align:right;font-weight:700;color:var(--navy)">Price (TZS)</th>
+              <th style="padding:8px 12px;text-align:right;font-weight:700;color:var(--navy)">Price (M TZS)</th>
+              <th style="padding:8px 12px;text-align:right;font-weight:700;color:var(--navy)">YoY Change</th>
+            </tr>
+          </thead>
+          <tbody>${priceRows}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('ward-result').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── LIGHTBOX ──────────────────────────────────────────────────────
 function openLB(src,cap){
   const lb=document.getElementById('lb');lb.style.display='';
   document.getElementById('lb-img').src=src;
@@ -514,6 +563,17 @@ document.addEventListener('keydown',e=>{
   if(e.key===' '&&document.getElementById('maps').classList.contains('active')){e.preventDefault();toggleSlideshow();}
 });
 
+// ── NAVIGATION ────────────────────────────────────────────────────
+function show(id,el){
+  if(id!=='maps')stopSlideshow();
+  const hero=document.getElementById('hero');
+  hero.classList.remove('active');
+  document.querySelectorAll('.section').forEach(s=>{s.classList.remove('active');s.style.display='';});
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  if(id==='hero'){hero.classList.add('active');}
+  else{document.getElementById(id).classList.add('active');}
+  if(el)el.classList.add('active');
+}
 function toggleAbout(){
   const p=document.getElementById('about-panel');
   const b=document.getElementById('about-btn');
@@ -539,14 +599,15 @@ const voiceToast=document.getElementById('voice-toast');
 const navLinks=document.querySelectorAll('nav a');
 const VOICE_MAP=[
   {keys:['home','nyumbani','mwanzo'],id:'hero',navIdx:0},
-  {keys:['spatial','spatial map','spatial maps','ramani','map'],id:'maps',navIdx:1},
-  {keys:['price trend','price trends','trend','mwelekeo','bei'],id:'trends',navIdx:2},
-  {keys:['gtwr','gtwr result','gtwr results','model','matokeo'],id:'gtwr',navIdx:3},
+  {keys:['spatial','spatial map','spatial maps','ramani'],id:'maps',navIdx:1},
+  {keys:['price trend','price trends','trend','mwelekeo'],id:'trends',navIdx:2},
+  {keys:['gtwr','gtwr result','model','matokeo'],id:'gtwr',navIdx:3},
   {keys:['correlation','correlations','uhusiano'],id:'corr',navIdx:4},
-  {keys:['trajectory','trajectories','projection','2040','utabiri'],id:'traj',navIdx:5},
-  {keys:['other','other figures','takwimu nyingine','matumizi'],id:'other',navIdx:6},
-  {keys:['help','msaada','mawasiliano','contact'],id:'help',navIdx:7},
-  {keys:['play','slideshow','anza','start'],action:'play'},
+  {keys:['trajectory','trajectories','projection','2040'],id:'traj',navIdx:5},
+  {keys:['other','other figures'],id:'other',navIdx:6},
+  {keys:['search','ward search','tafuta'],id:'search',navIdx:7},
+  {keys:['help','msaada','contact'],id:'help',navIdx:8},
+  {keys:['play','slideshow','anza'],action:'play'},
   {keys:['stop','pause','simama'],action:'stop'},
   {keys:['next','inayofuata'],action:'next'},
   {keys:['previous','iliyopita','rudi'],action:'prev'},
@@ -561,14 +622,23 @@ function handleVoiceCommand(transcript){
   for(const entry of VOICE_MAP){
     if(entry.keys.some(k=>t.includes(k))){
       if(entry.action==='play'){startSlideshow();showToast('▶ Slideshow started');return true;}
-      if(entry.action==='stop'){stopSlideshow();showToast('⏸ Slideshow paused');return true;}
-      if(entry.action==='next'){ssNext();showToast('▶ Next map');return true;}
-      if(entry.action==='prev'){ssPrev();showToast('◀ Previous map');return true;}
+      if(entry.action==='stop'){stopSlideshow();showToast('⏸ Paused');return true;}
+      if(entry.action==='next'){ssNext();showToast('▶ Next');return true;}
+      if(entry.action==='prev'){ssPrev();showToast('◀ Previous');return true;}
       const navEl=navLinks[entry.navIdx];
       show(entry.id,navEl);
-      showToast('✓ Navigating to: '+navEl.textContent.trim());
+      showToast('✓ '+navEl.textContent.trim());
       return true;
     }
+  }
+  // Try ward search by voice
+  const wardKey=Object.keys(WARD_DATA).find(k=>t.includes(k.toLowerCase())||t.includes(WARD_DATA[k].name.toLowerCase()));
+  if(wardKey){
+    show('search',navLinks[7]);
+    document.getElementById('ward-input').value=WARD_DATA[wardKey].name;
+    showWard(wardKey);
+    showToast('🔍 Showing: '+WARD_DATA[wardKey].name);
+    return true;
   }
   showToast('❓ Not recognised: "'+transcript+'"',3000);
   return false;

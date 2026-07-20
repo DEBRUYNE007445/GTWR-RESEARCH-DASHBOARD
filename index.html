@@ -355,7 +355,7 @@ function startSlideshow(){ssPlaying=true;const btn=document.getElementById('ss-p
 function scheduleNext(){
   clearTimeout(ssTimer);const pb=document.getElementById('ss-progress-bar');
   pb.style.transition='none';pb.style.width='0%';
-  setTimeout(()=>{pb.style.transition=`width ${ssSpeedMs}ms linear`;pb.style.width='100%';},30);
+  setTimeout(()=>{pb.style.transition=`width ${ssSpeedMs}ms linear`;pb.style.width='100%';},20);
   ssTimer=setTimeout(()=>{if(!ssPlaying)return;setMap((currentMapIdx+1)%MAPS.length,null);scheduleNext();},ssSpeedMs);
 }
 function stopSlideshow(){
